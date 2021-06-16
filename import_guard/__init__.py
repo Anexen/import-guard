@@ -15,7 +15,6 @@ __all__ = ["guard", "mod", "ForbiddenImportError", "ForbiddenImportWarning"]
 
 _original_import = __builtins__["__import__"]
 
-
 # def iter_callers(frame):
 #     _is_lazy = False
 
@@ -153,7 +152,7 @@ class _Guard:
         self, name, globals_=None, locals_=None, fromlist=(), level=0
     ):
         parent_frame = inspect.currentframe().f_back
-        full_name = self._get_full_module_name(name, locals_, level)
+        full_name = self._get_full_module_name(name, globals_, level)
 
         import_info = ImportInfo(full_name, fromlist, level)
         caller_info = caller_info_from_frame(parent_frame)
@@ -173,18 +172,28 @@ class _Guard:
             method = getattr(observer, "on_import_" + event)
             method(import_info, caller_info, self._stack, self.strict)
 
-    def _get_full_module_name(self, name, locals_, level):
-        if level == 0 or not locals_:
+    def _get_full_module_name(self, name, globals_, level):
+        if level == 0 or not globals_:
             # absolute import
             return name
 
-        # relative import
+        # calculate package from the relative import:
         # from .exceptions import Error
-        package = locals_.get("__name__", "").split(".")
-        if level > 1:
-            # relative import from parent package
-            # from ...exceptions import Error
-            package = package[: -level + 1]
+
+        # see _calc___package__ from importlib._bootstrap
+        package = globals_.get("__package__")
+
+        if package is None:
+            spec = globals_.get("__spec__")
+            if spec is not None:
+                package = spec.parent
+            else:
+                package = globals_["__name__"]
+
+                if "__path__" not in globals_:
+                    package = package.rpartition(".")[0]
+
+        package = package.split(".")
 
         # from . import exceptions
         # leads to empty name

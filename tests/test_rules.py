@@ -36,6 +36,13 @@ class TestRules(unittest.TestCase):
         assert not guard.is_import_allowed("csv", "logging")
         assert guard.is_import_allowed("csv", "logging", top_level=False)
 
+    def test_allow_only_lazy_imports(self):
+        guard.set_deny_rules({"myproject": mod.top_level(mod.matches(".*"))})
+
+        assert guard.is_import_allowed("myproject", "csv", top_level=False)
+        assert not guard.is_import_allowed("myproject", "csv")
+        assert not guard.is_import_allowed("myproject", "myproject.api")
+
     def test_rules_from_readme(self):
         guard.set_deny_rules(
             {
