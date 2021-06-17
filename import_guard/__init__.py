@@ -13,7 +13,21 @@ from .trie import Trie
 __all__ = ["guard", "mod", "ForbiddenImportError", "ForbiddenImportWarning"]
 
 
-_original_import = __builtins__["__import__"]
+def get_import_function():
+    if isinstance(__builtins__, dict):
+        return __builtins__["__import__"]
+
+    return __builtins__.__import__
+
+
+def set_import_function(f):
+    if isinstance(__builtins__, dict):
+        __builtins__["__import__"] = f
+    else:
+        __builtins__.__import__ = f
+
+
+_original_import = get_import_function()
 
 # def iter_callers(frame):
 #     _is_lazy = False
@@ -119,11 +133,11 @@ class _Guard:
         self.register(_TracingObserver())
 
     def enable(self, strict=False):
-        __builtins__["__import__"] = self._import_hook
+        set_import_function(self._import_hook)
         self.strict = strict
 
     def disable(self):
-        __builtins__["__import__"] = _original_import
+        set_import_function(_original_import)
 
     def set_deny_rules(self, rules):
         self.register(_DefendingObserver(rules))
