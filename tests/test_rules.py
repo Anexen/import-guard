@@ -37,36 +37,36 @@ class TestRules(unittest.TestCase):
         assert guard.is_import_allowed("csv", "logging", top_level=False)
 
     def test_allow_only_lazy_imports(self):
-        guard.set_deny_rules({"myproject": mod.top_level(mod.matches(".*"))})
+        guard.set_deny_rules({"test_proj": mod.top_level(mod.matches(".*"))})
 
-        assert guard.is_import_allowed("myproject", "csv", top_level=False)
-        assert not guard.is_import_allowed("myproject", "csv")
-        assert not guard.is_import_allowed("myproject", "myproject.api")
+        assert guard.is_import_allowed("test_proj", "csv", top_level=False)
+        assert not guard.is_import_allowed("test_proj", "csv")
+        assert not guard.is_import_allowed("test_proj", "test_proj.api")
 
     def test_rules_from_readme(self):
         guard.set_deny_rules(
             {
-                "myproject": "csv",
-                "myproject.api": [
+                "test_proj": "csv",
+                "test_proj.api": [
                     "selenium",
-                    mod.top_level("myproject.tasks"),
+                    mod.top_level("test_proj.tasks"),
                 ],
-                "myproject.core": mod.matches(
-                    r"myproject\.(api|business_logic)"
+                "test_proj.core": mod.matches(
+                    r"test_proj\.(api|business_logic)"
                 ),
-                "myproject.logging": ~mod.any(["logging", "yaml"]),
+                "test_proj.logging": ~mod.any(["logging", "yaml"]),
             }
         )
 
-        assert not guard.is_import_allowed("myproject.api", "csv")
-        assert not guard.is_import_allowed("myproject.api", "selenium")
-        assert not guard.is_import_allowed("myproject.api", "myproject.tasks")
+        assert not guard.is_import_allowed("test_proj.api", "csv")
+        assert not guard.is_import_allowed("test_proj.api", "selenium")
+        assert not guard.is_import_allowed("test_proj.api", "test_proj.tasks")
         assert not guard.is_import_allowed(
-            "myproject.core.db", "myproject.api"
+            "test_proj.core.db", "test_proj.api"
         )
-        assert guard.is_import_allowed("myproject.api", "logging")
+        assert guard.is_import_allowed("test_proj.api", "logging")
         assert guard.is_import_allowed(
-            "myproject.api", "myproject.tasks", top_level=False
+            "test_proj.api", "test_proj.tasks", top_level=False
         )
 
 

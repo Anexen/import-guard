@@ -21,16 +21,16 @@ from import_guard import guard, mod
 
 
 guard.set_deny_rules({
-    # deny `csv` import from `myproject` and submodules
-    "myproject": "csv",  # the same as mod("csv")
-    # deny `selenium` and top_level `myproject.tasks` imports from myproject.api
-    # but allow `myproject.tasks` import inside the function (lazy import)
-    # the same as mod("selenium") | (mod("myproject.tasks") & Flags.TopLevel)
-    "myproject.api": ["selenium", mod.top_level("myproject.tasks")],
-    # deny `myproject.api` and `myproject.business_logic` imports from `myproject.core`
-    "myproject.core": mod.matches(r"myproject\.(api|business_logic)"),
+    # deny `csv` import from `test_proj` and submodules
+    "test_proj": "csv",  # the same as mod("csv")
+    # deny `selenium` and top_level `test_proj.tasks` imports from test_proj.api
+    # but allow `test_proj.tasks` import inside the function (lazy import)
+    # the same as mod("selenium") | (mod("test_proj.tasks") & Flags.TopLevel)
+    "test_proj.api": ["selenium", mod.top_level("test_proj.tasks")],
+    # deny `test_proj.api` and `test_proj.business_logic` imports from `test_proj.core`
+    "test_proj.core": mod.matches(r"test_proj\.(api|business_logic)"),
     # deny all imports except `logging` and `yaml`
-    "myproject.logging": ~mod.any(["logging", "yaml"]),
+    "test_proj.logging": ~mod.any(["logging", "yaml"]),
 })
 
 # raise ForbiddenImportError
@@ -40,11 +40,11 @@ guard.enable(strict=True)
 ### Rules testing
 
 ```python
-guard.is_import_allowed("myproject.api", "csv")  # False
-guard.is_import_allowed("myproject.api", "logging")  # True
-guard.is_import_allowed("myproject.api", "selenium")  # False
-guard.is_import_allowed("myproject.api", "myproject.tasks")  # False
-guard.is_import_allowed("myproject.api", "myproject.tasks", top_level=False)  # True
+guard.is_import_allowed("test_proj.api", "csv")  # False
+guard.is_import_allowed("test_proj.api", "logging")  # True
+guard.is_import_allowed("test_proj.api", "selenium")  # False
+guard.is_import_allowed("test_proj.api", "test_proj.tasks")  # False
+guard.is_import_allowed("test_proj.api", "test_proj.tasks", top_level=False)  # True
 ```
 
 # Advanced usage
@@ -65,12 +65,12 @@ elif env == 'local':
 
 ```python
 guard.set_deny_rules({
-    "myproject.core": [
-        # deny top-level import of `myproject.api` and `myproject.business_logic`
-        mod.top_level(mod.matches(r"myproject\.(api|business_logic)"))
+    "test_proj.core": [
+        # deny top-level import of `test_proj.api` and `test_proj.business_logic`
+        mod.top_level(mod.matches(r"test_proj\.(api|business_logic)"))
     ],
     # deny all imports expect `logging` and lazy sentry
-    "myproject.logging": ~mod.any(["logging", mod.top_level("sentry")]),
+    "test_proj.logging": ~mod.any(["logging", mod.top_level("sentry")]),
 })
 ```
 
@@ -78,6 +78,6 @@ guard.set_deny_rules({
 
 ```python
 guard.set_deny_rules({
-    "myproject.business_logic": mod.top_level(mod.matches(".*")),
+    "test_proj.business_logic": mod.top_level(mod.matches(".*")),
 })
 ```

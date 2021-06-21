@@ -16,21 +16,21 @@ class TestForbiddenImportError(unittest.TestCase):
 
 
 class TestProject(unittest.TestCase):
-    def test_myproject(self):
-        # rules are defined inside myproject
+    def test_test_proj(self):
+        # rules are defined inside test_proj
         expected = {
             # <module> forbidden in <caller>
-            ("csv", "myproject.api"),
-            ("bisect", "myproject.api"),
-            ("myproject.business_logic", "myproject.core"),
-            ("json", "myproject.logging")
+            ("csv", "test_proj.api"),
+            ("bisect", "test_proj.api"),
+            ("test_proj.business_logic", "test_proj.core"),
+            ("json", "test_proj.logging")
         }
 
         # capture all warnings, extract affected modules
         # and compare to expected
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            import_module("myproject").run()
+            import_module("test_proj").run()
 
         pattern = re.compile(r"Importing `([\w\.]+)` from `([\w\.]+)`")
         actual = {pattern.findall(str(x.message))[0] for x in w}
