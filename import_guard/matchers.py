@@ -1,5 +1,7 @@
 import re
 
+from .models import CallerInfo, ImportInfo
+
 
 def wrap(obj):
     if isinstance(obj, Matcher):
@@ -20,6 +22,15 @@ def wrap(obj):
 class Matcher:
     def matches(self, import_info, caller_info):
         raise NotImplementedError
+
+    def test(self, imported_module, caller="<stdin>", top_level=True):
+        if isinstance(caller, str):
+            caller = CallerInfo.from_string(caller, top_level)
+
+        if isinstance(imported_module, str):
+            imported_module = ImportInfo.from_string(imported_module)
+
+        return self.matches(imported_module, caller)
 
     def __invert__(self):
         return Invert(self)
@@ -71,7 +82,7 @@ class Regex(Matcher):
         self.pattern = pattern
 
     def matches(self, import_info, caller_info):
-        return self.pattern.match(import_info.module_name)
+        return bool(self.pattern.match(import_info.module_name))
 
     def __repr__(self):
         return "re('{}')".format(self.pattern.pattern)

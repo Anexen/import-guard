@@ -59,16 +59,10 @@ class _Guard:
             return True
 
         if isinstance(caller, str):
-            caller = CallerInfo(
-                caller,
-                function="<module>" if top_level else "dummy",
-                filename="main.py",
-                lineno=0,
-                depth=0,
-            )
+            caller = CallerInfo.from_string(caller, top_level)
 
         if isinstance(imported_module, str):
-            imported_module = ImportInfo(imported_module, None, 0)
+            imported_module = ImportInfo.from_string(imported_module)
 
         return defender.is_import_allowed(imported_module, caller)
 

@@ -34,6 +34,10 @@ class ImportInfo(
         ],
     )
 ):
+    @classmethod
+    def from_string(cls, imported_module):
+        return cls(imported_module, None, 0)
+
     @staticmethod
     def get_full_module_name(name, globals_, level):
         if level == 0 or not globals_:
@@ -91,6 +95,16 @@ class CallerInfo(
             filename,
             frame.f_lineno,
             depth,
+        )
+
+    @classmethod
+    def from_string(cls, caller, top_level=True):
+        return cls(
+            caller,
+            function="<module>" if top_level else "<lazy>",
+            filename="main.py",
+            lineno=0,
+            depth=0,
         )
 
     @classmethod
