@@ -1,7 +1,5 @@
 import re
 
-from .models import is_lazy
-
 
 def wrap(obj):
     if isinstance(obj, Matcher):
@@ -79,9 +77,23 @@ class Regex(Matcher):
         return "re('{}')".format(self.pattern.pattern)
 
 
-class TopLevel(FlagMatcher):
+class TopLevel(Matcher):
     def matches(self, import_info, caller_info):
-        return is_lazy(caller_info)
+        return not caller_info.is_lazy()
+
+    def __repr__(self):
+        return "TopLevel"
+
+
+class Depth(Matcher):
+    def __init__(self, max_depth):
+        self.max_depth = max_depth
+
+    def matches(self, import_info, caller_info):
+        return caller_info.depth <= self.max_depth
+
+    def __repr__(self):
+        return "Depth({})".format(self.max_depth)
 
 
 class Any(MultiMatcher):
@@ -105,21 +117,25 @@ class ModuleMatcherHelpers:
     all = All
     matches = Regex
 
-    wrap = staticmethod(wrap)
-
     def __call__(self, module_name):
-        return Exact(module_name)
+        return wrap(module_name)
 
     def top_level(self, matcher):
-        return All([self.wrap(matcher), TopLevel()])
+        return All([self(matcher), TopLevel()])
 
-    def not_std(self):
-        # TODO
-        raise NotImplementedError
+    def explicit(self, matcher):
+        return self.depth(0, matcher)
 
-    def hook(self, func):
-        # TODO
-        raise NotImplementedError
+    def depth(self, depth, matcher):
+        return All([Depth(depth), self(matcher)])
+
+    # def not_std(self):
+    #     # TODO
+    #     raise NotImplementedError
+
+    # def hook(self, func):
+    #     # TODO
+    #     raise NotImplementedError
 
 
 mod = ModuleMatcherHelpers()

@@ -5,7 +5,7 @@ class Node:
     def __init__(self, module, data=_missing):
         self.module = module
         self.data = data
-        self.children = dict()
+        self.children = {}
 
     def __repr__(self):
         return "[{}] -> {}".format(

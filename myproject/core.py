@@ -1,3 +1,6 @@
+import socket
+
+
 def do_some_common_work():
     pass
 
