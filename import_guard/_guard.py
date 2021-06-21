@@ -23,6 +23,16 @@ def _set_import_function(f):
 
 _original_import = _get_import_function()
 
+# see importlib._bootstrap_external._setup
+_builtin_modules_injected_by_importlib = {
+    "_io",
+    "_warnings",
+    "builtins",
+    "marshal",
+}
+
+_skip_modules = {"linecache"} | _builtin_modules_injected_by_importlib
+
 
 class _Guard:
     def __init__(self):
@@ -70,8 +80,8 @@ class _Guard:
     def _import_hook(
         self, name, globals_=None, locals_=None, fromlist=(), level=0
     ):
-
-        if name == "linecache":
+        # skip specific modules and private modules
+        if name in _skip_modules or name[0] == "_":
             return _original_import(name, globals_, locals_, fromlist, level)
 
         parent_frame = inspect.currentframe().f_back

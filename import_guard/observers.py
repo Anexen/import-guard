@@ -73,11 +73,13 @@ class DefendingObserver(Observer):
 
         path = [(x.filename, x.lineno) for x in stack]
 
-        message = "Importing `{}` from `{}` is not allowed [{}] ({})".format(
-            import_info.module_name,
-            caller_info.module_name,
-            caller_info.depth,
-            " -> ".join(map(lambda x: "{}:{}".format(*x), path)),
+        message = (
+            "Importing `{}` from `{}` is not allowed [depth: {}] ({})".format(
+                import_info.module_name,
+                caller_info.module_name,
+                caller_info.depth,
+                " -> ".join(map(lambda x: "{}:{}".format(*x), path)),
+            )
         )
 
         if strict:

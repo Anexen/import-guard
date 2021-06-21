@@ -11,7 +11,7 @@ def iter_stack(frame, entrypoint):
 
         if (
             filename.startswith("<frozen importlib")
-            or "/import_guard/" in filename
+            or "import_guard/" in filename
         ):
             frame = frame.f_back
             continue
