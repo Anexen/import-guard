@@ -34,3 +34,13 @@ line_length = 79
 lines_after_imports = 2
 multi_line_output = 3
 use_parentheses = true
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+isolated_build = True
+envlist = py27,py3.6,py3.9,pypy3.6,pypy2.7
+
+[testenv]
+commands = python -m unittest discover tests -v
+"""
