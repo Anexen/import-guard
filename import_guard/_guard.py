@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import inspect
 from functools import wraps
 
@@ -37,7 +35,7 @@ _skip_modules = {"linecache"} | _builtin_modules_injected_by_importlib
 class _Guard:
     def __init__(self):
         self.strict = False
-        self.entrypoint = None
+        self.entrypoints = None
         self._observers = {}
 
     def register(self, observer):
@@ -51,7 +49,7 @@ class _Guard:
         del self._observers[TracingObserver.name]
 
     def enable(self, strict=False, entrypoints=None):
-        # entrypoints limits stack unwinding
+        # entrypoints limits stack unwinding. list of filenames
         self.strict = strict
 
         if entrypoints is None:

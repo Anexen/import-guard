@@ -1,5 +1,5 @@
-import sys
 from collections import namedtuple
+from sys import modules as sys_modules
 
 
 __all__ = ["ImportInfo", "CallerInfo"]
@@ -83,6 +83,7 @@ class CallerInfo(
     )
 ):
     _module_cache = {}
+    _module_cache_keys = set()
 
     @classmethod
     def from_frame(cls, frame, depth=0, _is_lazy=False):
@@ -127,28 +128,24 @@ class CallerInfo(
     def is_lazy(self):
         return self.function != "<module>"
 
-    @staticmethod
-    def _get_filename_from_module(module):
-        if hasattr(module, "__file__"):
-            if module.__file__ is not None:
-                return module.__file__.replace(".pyc", ".py")
-
-        if hasattr(module, "__spec__"):
-            return module.__spec__.origin
-
     @classmethod
     def _get_module_name_by_filename(cls, filename):
-        if filename in cls._module_cache:
-            return cls._module_cache[filename]
+        cache = cls._module_cache
 
-        cls._module_cache.setdefault(filename, filename)
+        if filename in cache:
+            return cache[filename]
 
-        cls._module_cache.update(
-            {
-                cls._get_filename_from_module(module): name
-                for name, module in sys.modules.items()
-                if hasattr(module, "__file__")
-            }
-        )
+        modules_to_fetch = set(sys_modules) - cls._module_cache_keys
 
-        return cls._module_cache[filename]
+        for name in modules_to_fetch:
+            module = sys_modules[name]
+            f = getattr(module, "__file__", None)
+            if f is not None:
+                cache[f[:-1] if f[-3:] == "pyc" else f] = name
+            else:
+                spec = getattr(module, "__spec__", None)
+                if spec is not None:
+                    cache[spec.origin] = name
+
+        cls._module_cache_keys.update(modules_to_fetch)
+        return cache.get(filename, filename)
