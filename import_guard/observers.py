@@ -98,6 +98,5 @@ class DefendingObserver(Observer):
         return True
 
 
-# TODO
 # class ProfilingObserver(Observer):
 #     name = "profiler"

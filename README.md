@@ -55,11 +55,9 @@ guard.enable()
 guard.set_deny_rules({"<stdin>": "decimal"})
 # shortcut for mod("decimal")
 
-# matches:
-from decimal import Decimal
+from decimal import Decimal  # shows warning
 
-# doesn't match:
-from enum import Enum
+from enum import Enum  # allowed
 ```
 
 #### Explicit match
@@ -75,12 +73,13 @@ import csv  # shows warning!
 What happened?
 
 `csv` imports some modules under the hood, e.g. `re` or `io`.
-`main.py` implicitly initiated `re` module loading through the `csv` module (rules matches at the depth = 1).
+We implicitly initiated loading of the `re` module through the `csv` module (rule matches at depth = 1).
 This is the default behavior. You can check only explicit imports using `mod.explicit("re")` function.
 
 ```python
 guard.set_deny_rules({"<stdin>": mod.explicit("re")})
-reload(csv)
+reload(csv)  # allowed
+import re  # shows warning
 ```
 
 #### Match multiple modules
@@ -90,9 +89,9 @@ guard.set_deny_rules({"<stdin>": ["logging", "json"]})
 # the same as mod.any(["logging", "json'])
 # the same as mod("logging") | mod("json")
 
-# matches
-import json
-from logging import getLogger
+
+import json  # shows warning
+from logging import getLogger  # shows warning
 ```
 
 #### Match by regular expression
@@ -109,7 +108,7 @@ from logging.config import dictConfig
 ```python
 guard.set_deny_rules({"<stdin>": ~mod.matches("log.*")})
 
-import io
+import io # shows warning
 ```
 
 #### Match only module-level imports
@@ -119,12 +118,13 @@ cycle import or to postpone importing until you run code that actually needs
 the module you're importing.
 
 ```python
+# deny module-level imports
 guard.set_deny_rules({"<stdin>": mod.top_level("array")})
 
 def some_function():
-    import array
+    import array  # allowed (lazy import)
 
-some_function()  # allowed
+some_function()
 import array  # shows warning
 ```
 
@@ -160,6 +160,46 @@ elif env == "local":
     guard.enable(strict=True)
 ```
 
+
+#### Rules hierarchy
+
+The set of deny rule for a module also affects its submodules.
+
+```python
+guard.set_deny_rules({
+    "test_proj": "json",
+    "test_proj.api": ["selenum", "pandas"],
+    "test_proj.core": "celery"
+})
+```
+
+`test_proj.core` disallows `json` and `celery` imports.
+`test_proj.api.views` disallows `json`, `selenium`, `pandas` imports.
+
+#### Lazy module
+
+Consider the following project structure:
+
+```python
+# main.py
+import api
+
+# api.py
+def view():
+    import tasks
+
+# tasks.py
+import pandas
+```
+
+Here `main.py` imports `api`, which imports `tasks` lazily, which imports `pandas` at module level.
+`import_guard` handles this case as lazy module import and will think that pandas being imported lazily.
+Thus, in this case, the following rules do not raise a warning:
+
+```python
+guard.set_deny_rules({"tasks": mod.top_level("pandas")})
+```
+
 # Testing
 
 ### Rules
@@ -177,11 +217,15 @@ rule.test("mod1", caller="<stdin>", top_level=False)
 Testing deny rules through the guard:
 
 ```python
-guard.is_import_allowed("test_proj.api", "csv")  # False
-guard.is_import_allowed("test_proj.api", "logging")  # True
-guard.is_import_allowed("test_proj.api", "selenium")  # False
-guard.is_import_allowed("test_proj.api", "test_proj.tasks")  # False
-guard.is_import_allowed("test_proj.api", "test_proj.tasks", top_level=False)  # True
+guard.is_import_allowed("csv", caller="test_proj.api")  # False
+guard.is_import_allowed("logging", caller="test_proj.api")  # True
+guard.is_import_allowed("selenium", caller="test_proj.api")  # False
+guard.is_import_allowed(
+    "test_proj.tasks", caller="test_proj.api"
+)  # False
+guard.is_import_allowed(
+    "test_proj.tasks", caller="test_proj.api", top_level=False
+)  # True
 ```
 
 ### Unit tests

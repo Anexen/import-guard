@@ -47,13 +47,19 @@ class _Guard:
     def trace(self):
         self.register(TracingObserver())
 
-    def enable(self, strict=False, entrypoint=None):
+    def notrace(self):
+        del self._observers[TracingObserver.name]
+
+    def enable(self, strict=False, entrypoints=None):
+        # entrypoints limits stack unwinding
         self.strict = strict
 
-        if entrypoint is None:
-            entrypoint = inspect.currentframe().f_back.f_code.co_filename
+        if entrypoints is None:
+            entrypoints = [
+                inspect.currentframe().f_back.f_code.co_filename,
+            ]
 
-        self.entrypoint = entrypoint
+        self.entrypoints = set(entrypoints)
         _set_import_function(self._import_hook)
 
     def disable(self):
@@ -62,7 +68,9 @@ class _Guard:
     def set_deny_rules(self, rules):
         self.register(DefendingObserver(rules))
 
-    def is_import_allowed(self, caller, imported_module, top_level=True):
+    def is_import_allowed(
+        self, imported_module, caller="<stdin>", top_level=True
+    ):
         defender = self._observers.get("defender")
 
         if not defender:
@@ -80,8 +88,8 @@ class _Guard:
     def _import_hook(
         self, name, globals_=None, locals_=None, fromlist=(), level=0
     ):
-        # skip specific modules and private modules
-        if name in _skip_modules or name[0] == "_":
+        # skip specific modules (and private modules?)
+        if name in _skip_modules:  # or name[0] == "_":
             return _original_import(name, globals_, locals_, fromlist, level)
 
         parent_frame = inspect.currentframe().f_back
@@ -89,7 +97,7 @@ class _Guard:
         full_name = ImportInfo.get_full_module_name(name, globals_, level)
         import_info = ImportInfo(full_name, fromlist, level)
 
-        stack = CallerInfo.stack(parent_frame, self.entrypoint)
+        stack = CallerInfo.stack(parent_frame, self.entrypoints)
 
         try:
             for observer in self._observers.values():

@@ -47,11 +47,6 @@ class MultiMatcher(Matcher):
         self.matchers = [wrap(x) for x in matchers]
 
 
-class FlagMatcher(Matcher):
-    def __repr__(self):
-        return "Flags.{}".format(self.__class__.__name__)
-
-
 class Invert(Matcher):
     def __init__(self, obj):
         self.matcher = wrap(obj)

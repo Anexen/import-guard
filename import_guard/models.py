@@ -5,7 +5,7 @@ from collections import namedtuple
 __all__ = ["ImportInfo", "CallerInfo"]
 
 
-def iter_stack(frame, entrypoint):
+def iter_stack(frame, entrypoints):
     while frame:
         filename = frame.f_code.co_filename
 
@@ -18,7 +18,7 @@ def iter_stack(frame, entrypoint):
 
         yield frame
 
-        if filename == entrypoint:
+        if filename in entrypoints:
             break
 
         frame = frame.f_back
@@ -108,12 +108,12 @@ class CallerInfo(
         )
 
     @classmethod
-    def stack(cls, initial_frame, entrypoint):
+    def stack(cls, initial_frame, entrypoints):
         is_lazy = False
         stack = []
 
         for depth, frame in reversed(
-            list(enumerate(iter_stack(initial_frame, entrypoint)))
+            list(enumerate(iter_stack(initial_frame, entrypoints)))
         ):
             info = CallerInfo.from_frame(frame, depth, is_lazy)
 

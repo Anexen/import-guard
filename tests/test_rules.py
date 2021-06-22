@@ -5,43 +5,45 @@ from import_guard import guard, mod
 
 class TestRules(unittest.TestCase):
     def test_simple_rule(self):
-        guard.set_deny_rules({"csv": "io"})
+        guard.set_deny_rules({"<stdin>": "io"})
 
-        assert guard.is_import_allowed("csv", "bisect")
-        assert not guard.is_import_allowed("csv", "io")
+        assert guard.is_import_allowed("bisect")
+        assert not guard.is_import_allowed("io")
 
     def test_inverted_rule(self):
-        guard.set_deny_rules({"csv": ~mod("io")})
+        guard.set_deny_rules({"<stdin>": ~mod("io")})
 
-        assert not guard.is_import_allowed("csv", "bisect")
-        assert guard.is_import_allowed("csv", "io")
+        assert not guard.is_import_allowed("bisect")
+        assert guard.is_import_allowed("io")
 
     def test_multiple_modules_in_rule(self):
-        guard.set_deny_rules({"csv": ["io", "logging"]})
+        guard.set_deny_rules({"<stdin>": ["io", "logging"]})
 
-        assert guard.is_import_allowed("csv", "bisect")
-        assert not guard.is_import_allowed("csv", "io")
-        assert not guard.is_import_allowed("csv", "logging")
+        assert guard.is_import_allowed("bisect")
+        assert not guard.is_import_allowed("io")
+        assert not guard.is_import_allowed("logging")
 
     def test_regex_rule(self):
-        guard.set_deny_rules({"csv": mod.matches(".*io")})
+        guard.set_deny_rules({"<stdin>": mod.matches(".*io")})
 
-        assert guard.is_import_allowed("csv", "bisect")
-        assert not guard.is_import_allowed("csv", "io")
-        assert not guard.is_import_allowed("csv", "_io")
+        assert guard.is_import_allowed("bisect")
+        assert not guard.is_import_allowed("io")
+        assert not guard.is_import_allowed("asyncio")
 
     def test_lazy_import(self):
-        guard.set_deny_rules({"csv": mod.top_level("logging")})
+        guard.set_deny_rules({"<stdin>": mod.top_level("logging")})
 
-        assert not guard.is_import_allowed("csv", "logging")
-        assert guard.is_import_allowed("csv", "logging", top_level=False)
+        assert not guard.is_import_allowed("logging")
+        assert guard.is_import_allowed("logging", top_level=False)
 
     def test_allow_only_lazy_imports(self):
         guard.set_deny_rules({"test_proj": mod.top_level(mod.matches(".*"))})
 
-        assert guard.is_import_allowed("test_proj", "csv", top_level=False)
-        assert not guard.is_import_allowed("test_proj", "csv")
-        assert not guard.is_import_allowed("test_proj", "test_proj.api")
+        assert guard.is_import_allowed(
+            "csv", caller="test_proj", top_level=False
+        )
+        assert not guard.is_import_allowed("csv", caller="test_proj")
+        assert not guard.is_import_allowed("test_proj.api", caller="test_proj")
 
     def test_rules_from_readme(self):
         guard.set_deny_rules(
@@ -58,15 +60,17 @@ class TestRules(unittest.TestCase):
             }
         )
 
-        assert not guard.is_import_allowed("test_proj.api", "csv")
-        assert not guard.is_import_allowed("test_proj.api", "selenium")
-        assert not guard.is_import_allowed("test_proj.api", "test_proj.tasks")
+        assert not guard.is_import_allowed("csv", caller="test_proj.api")
+        assert not guard.is_import_allowed("selenium", caller="test_proj.api")
         assert not guard.is_import_allowed(
-            "test_proj.core.db", "test_proj.api"
+            "test_proj.tasks", caller="test_proj.api"
         )
-        assert guard.is_import_allowed("test_proj.api", "logging")
+        assert not guard.is_import_allowed(
+            "test_proj.api", caller="test_proj.core.db"
+        )
+        assert guard.is_import_allowed("logging", caller="test_proj.api")
         assert guard.is_import_allowed(
-            "test_proj.api", "test_proj.tasks", top_level=False
+            "test_proj.tasks", caller="test_proj.api", top_level=False
         )
 
 
