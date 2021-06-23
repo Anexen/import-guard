@@ -4,7 +4,7 @@ build-backend = "flit_core.buildapi"
 
 [tool.flit.metadata]
 module = "import_guard"
-dist-name = "import-guard"
+# dist-name = "import-guard"
 author = "Anexen"
 home-page = "https://github.com/Anexen/import-guard"
 description-file = "README.md"
