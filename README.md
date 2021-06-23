@@ -14,6 +14,12 @@ Features:
 > In some cases it may lead to 1.5-2x slower import time (and startup time respectively).
 > It's recommended to enable import_guard only during the development.
 
+# Installation
+
+```bash
+pip install import-guard
+```
+
 # Usage
 
 ```python
