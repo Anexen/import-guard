@@ -1,6 +1,7 @@
 import unittest
 
 from import_guard import guard, mod
+from import_guard.models import ImportInfo
 
 
 class TestRules(unittest.TestCase):
@@ -44,6 +45,12 @@ class TestRules(unittest.TestCase):
         )
         assert not guard.is_import_allowed("csv", caller="test_proj")
         assert not guard.is_import_allowed("test_proj.api", caller="test_proj")
+
+    def test_start_import(self):
+        guard.set_deny_rules({"<stdin>": mod.star("csv")})
+
+        assert guard.is_import_allowed(ImportInfo("csv", ["DictReader"], 0))
+        assert not guard.is_import_allowed(ImportInfo("csv", ["*"], 0))
 
     def test_rules_from_readme(self):
         guard.set_deny_rules(

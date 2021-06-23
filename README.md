@@ -128,6 +128,14 @@ some_function()
 import array  # shows warning
 ```
 
+#### Match star import
+
+```python
+guard.set_deny_rules({"<stdin>": mod.star("csv")})
+
+from csv import *  # shows warning
+```
+
 #### Complex rules
 
 Rules are very flexible. You can combine them together in a different ways
@@ -140,11 +148,21 @@ mod.explicit(
 )
 ```
 
-Nice example: deny non-lazy imports in some module:
+Nice examples:
+
+- deny non-lazy imports in some module:
 
 ```python
 guard.set_deny_rules({
     "test_proj.business_logic": mod.top_level(mod.matches(".*")),
+})
+```
+
+- deny start imports in project:
+
+```python
+guard.set_deny_rules({
+    "test_proj": mod.star(mod.explicit(mod.matches(".*"))),
 })
 ```
 
@@ -159,7 +177,6 @@ elif env == "local":
     # raise ForbiddenImportError
     guard.enable(strict=True)
 ```
-
 
 #### Rules hierarchy
 

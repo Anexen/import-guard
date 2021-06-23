@@ -22,8 +22,9 @@ class TestProject(unittest.TestCase):
             # <module> forbidden in <caller>
             ("csv", "test_proj.api"),
             ("bisect", "test_proj.api"),
+            ("json", "test_proj.logging"),
             ("test_proj.business_logic", "test_proj.core"),
-            ("json", "test_proj.logging")
+            ("test_proj.logging", "test_proj.api"),
         }
 
         # capture all warnings, extract affected modules

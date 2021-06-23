@@ -1,7 +1,7 @@
 import bisect
 import csv
 
-from test_proj.logging import log
+from test_proj.logging import *
 
 
 def handle_request_1():

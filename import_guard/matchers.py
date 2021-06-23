@@ -91,6 +91,14 @@ class TopLevel(Matcher):
         return "TopLevel"
 
 
+class StarImport(Matcher):
+    def matches(self, import_info, caller_info):
+        return "*" in import_info.from_list
+
+    def __repr__(self):
+        return "Star"
+
+
 class Depth(Matcher):
     def __init__(self, max_depth):
         self.max_depth = max_depth
@@ -134,6 +142,9 @@ class ModuleMatcherHelpers:
 
     def depth(self, depth, matcher):
         return All([Depth(depth), self(matcher)])
+
+    def star(self, matcher):
+        return All([StarImport(), self(matcher)])
 
     # def not_std(self):
     #     # TODO

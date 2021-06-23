@@ -93,7 +93,7 @@ class _Guard:
         parent_frame = inspect.currentframe().f_back
 
         full_name = ImportInfo.get_full_module_name(name, globals_, level)
-        import_info = ImportInfo(full_name, fromlist, level)
+        import_info = ImportInfo(full_name, fromlist or [], level)
 
         stack = CallerInfo.stack(parent_frame, self.entrypoints)
 
