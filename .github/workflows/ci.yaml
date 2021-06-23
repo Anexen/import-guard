@@ -29,8 +29,8 @@ jobs:
         with:
           python-version: 3.9
       - run: |
-        pip install flit
-        flit build
+          pip install flit
+          flit build
       - name: Upload dist
         uses: actions/upload-artifact@v2
         with:
