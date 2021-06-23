@@ -18,3 +18,49 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: python -m unittest discover tests -v
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - run: |
+        pip install flit
+        flit build
+      - name: Upload dist
+        uses: actions/upload-artifact@v2
+        with:
+          name: dist
+          path: dist
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - uses: actions/download-artifact@v2
+        with:
+          name: dist
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: import_guard*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: PyPi publish
+        env:
+          FLIT_USERNAME: __token__
+          FLIT_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        run: |
+          pip install flit
+          flit publish
