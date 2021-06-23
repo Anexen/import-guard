@@ -126,19 +126,30 @@ class All(MultiMatcher):
         return "({})".format(" & ".join(map(repr, self.matchers)))
 
 
+class Hook(Matcher):
+    def __init__(self, func):
+        if not callable(func):
+            raise TypeError("must be callable")
+
+        self.func = func
+
+    def matches(self, import_info, caller_info):
+        return self.func(import_info, caller_info)
+
+
 class ModuleMatcherHelpers:
     any = Any
     all = All
     matches = Regex
 
-    def __call__(self, module_name):
-        return wrap(module_name)
-
-    def top_level(self, matcher):
-        return All([self(matcher), TopLevel()])
+    def __call__(self, matcher):
+        return wrap(matcher)
 
     def explicit(self, matcher):
         return self.depth(0, matcher)
+
+    def top_level(self, matcher):
+        return All([self(matcher), TopLevel()])
 
     def depth(self, depth, matcher):
         return All([Depth(depth), self(matcher)])
@@ -146,11 +157,10 @@ class ModuleMatcherHelpers:
     def star(self, matcher):
         return All([StarImport(), self(matcher)])
 
-    # def not_std(self):
-    #     # TODO
-    #     raise NotImplementedError
+    def hook(self, func):
+        return Hook(func)
 
-    # def hook(self, func):
+    # def not_std(self):
     #     # TODO
     #     raise NotImplementedError
 

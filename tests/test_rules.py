@@ -52,6 +52,34 @@ class TestRules(unittest.TestCase):
         assert guard.is_import_allowed(ImportInfo("csv", ["DictReader"], 0))
         assert not guard.is_import_allowed(ImportInfo("csv", ["*"], 0))
 
+    def test_custom_hook(self):
+        def is_import_without_from_list(import_info, caller_info):
+            return not bool(import_info.from_list)
+
+        def is_relative_import(import_info, caller_info):
+            return import_info.level > 0
+
+        guard.set_deny_rules(
+            {
+                "<stdin>": [
+                    # deny "import csv" in favor "from csv import DictReader"
+                    mod.hook(is_import_without_from_list),
+                    # deny relative import
+                    mod.hook(is_relative_import),
+                ]
+            }
+        )
+
+        # import csv
+        assert not guard.is_import_allowed(ImportInfo("csv", None, 0))
+        # from csv import DictReader
+        assert guard.is_import_allowed(ImportInfo("csv", ["DictReader"], 0))
+
+        # from .api import abc
+        assert not guard.is_import_allowed(ImportInfo("api", ["abc"], 1))
+        # from proj.api import abc
+        assert guard.is_import_allowed(ImportInfo("proj.api", ["abc"], 0))
+
     def test_rules_from_readme(self):
         guard.set_deny_rules(
             {

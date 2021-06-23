@@ -57,7 +57,7 @@ guard.set_deny_rules({"<stdin>": "decimal"})
 
 from decimal import Decimal  # shows warning
 
-from enum import Enum  # allowed
+from enum import Enum  # ok
 ```
 
 #### Explicit match
@@ -215,6 +215,19 @@ Thus, in this case, the following rules do not raise a warning:
 
 ```python
 guard.set_deny_rules({"tasks": mod.top_level("pandas")})
+```
+
+#### Custom module matcher
+
+```python
+def is_relative_import(import_info, caller_info):
+    return import_info.level > 1
+
+# deny relative import
+guard.set_deny_rules({"proj": mod.hook(is_relative_import)})
+
+from .api import view  # shows warning
+from proj.api import view  # ok
 ```
 
 # Testing
