@@ -7,4 +7,4 @@ from .observers import ForbiddenImportError, ForbiddenImportWarning
 
 __all__ = ["guard", "mod", "ForbiddenImportError", "ForbiddenImportWarning"]
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"

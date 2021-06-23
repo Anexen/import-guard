@@ -17,7 +17,7 @@ Features:
 # Installation
 
 ```bash
-pip install import_guard
+pip install import-guard
 ```
 
 # Usage
